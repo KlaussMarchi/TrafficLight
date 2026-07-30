@@ -1,0 +1,42 @@
+# Autostart no boot do Raspberry Pi (systemd).
+# Ajuste os caminhos se o projeto ou a venv nao estiverem em ~/TrafficLight e ~/trafficlight-venv.
+# Cole o bloco inteiro no terminal do Pi — $USER e $HOME sao expandidos na hora da criacao.
+
+# 1. cria o servico
+sudo tee /etc/systemd/system/trafficlight.service > /dev/null <<EOF
+[Unit]
+Description=Deteccao de semaforo e acionamento do rele
+After=multi-user.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$HOME/TrafficLight/Test/Raspberry
+Environment=PYTHONUNBUFFERED=1
+ExecStart=$HOME/trafficlight-venv/bin/python -c "from index import Raspberry; Raspberry(port='/dev/ttyUSB0', baud=921600, pin=16, show=False).start()"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 2. habilita e ja liga
+sudo systemctl daemon-reload
+sudo systemctl enable --now trafficlight
+
+# 3. acompanha a deteccao no terminal (ao vivo)
+journalctl -u trafficlight -f
+
+# ---- comandos do dia a dia ----
+sudo systemctl status trafficlight     # ver se esta rodando
+sudo systemctl restart trafficlight    # reiniciar apos mexer no codigo ou trocar o backup
+sudo systemctl stop trafficlight       # parar agora (volta no proximo boot)
+sudo systemctl disable trafficlight    # nao iniciar mais no boot
+journalctl -u trafficlight -n 100      # ultimas 100 linhas do log
+
+# Observacoes:
+# - Restart=always + RestartSec=5 cobrem o caso da ESP32-CAM ainda nao ter enumerado o /dev/ttyUSB0
+#   no boot: o servico morre, espera 5 s e tenta de novo ate a porta aparecer.
+# - Se usar o caminho estavel, troque port='/dev/ttyUSB0' por port='/dev/serial/by-id/<seu-id>'.
+# - show=False mantem tudo em terminal, sem janela e sem depender de desktop.

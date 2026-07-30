@@ -1,0 +1,14 @@
+torch==2.7.1
+torchvision==0.22.1
+numpy>=2.0
+opencv-python>=4.10
+albumentations>=2.0.8
+pyserial>=3.5
+
+# puxados por Model/Network/metrics/index.py, importado junto com ModelNetwork
+matplotlib>=3.9
+seaborn>=0.13
+
+# GPIO: Pi 4 ou anterior usa RPi.GPIO; no Pi 5 comente a linha abaixo e descomente rpi-lgpio (mesma API)
+RPi.GPIO>=0.7.1
+# rpi-lgpio>=0.6
